@@ -287,7 +287,7 @@ function EnterGame.doLogin()
   G.password = enterGame:getChildById('accountPasswordTextEdit'):getText()
   G.authenticatorToken = ''
   G.stayLogged = enterGame:getChildById('stayLoggedBox'):isChecked()
-  G.host = 'dbnultra.ddns.net'
+  G.host = 'dbleach.zapto.org'
   G.server = enterGame:getChildById('serverComboBox'):getText()
   if G.server == "Dbleach" then
   	G.port = 7171

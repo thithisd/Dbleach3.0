@@ -20,6 +20,8 @@ end
 function load()
   local version = g_game.getClientVersion()
   
+  g_game.enableFeature(GameSpritesU32)
+  g_game.enableFeature(GameSpritesAlphaChannel)
 
   local datPath, sprPath
   if filename then
