@@ -25,7 +25,7 @@ function caveBot.online()
 	saveWindow:hide()
 	saveWindow.onEnter = saveHide
 	saveWindow.onEscape = saveHide
-	MenuButton = modules.client_topmenu.addLeftButton('button', tr('Waypoints'), 'Icon', botaoMenu)
+	MenuButton = modules.client_topmenu.addLeftButton('button', tr('Waypoints'), '/cavebot_mod/icon.png', botaoMenu)
 	caveWindow:hide()
 	caveWindow.onEnter = hide
 	caveWindow.onEscape = hide
@@ -251,225 +251,243 @@ function caveBot.clearWaypoint()
 end
 
 function cave()
-if andar == nil then
-	andar = cycleEvent(function ()
-		local currentTime = os.time()
-		
-		if #caveBot.getWaypoints() == 0 then
-			return
-		end
-		if contador > #caveBot.getWaypoints() then
-			contador = 1
-		end
-		if not g_game.isOnline() then
-			return
-		end
-		local player = g_game.getLocalPlayer()
-		local pos = player:getPosition()
-		
-		if player:isAutoWalking() or player:isServerWalking() then
-			lastTime = currentTime
-			return
-		end
-		
-		if g_game.isAttacking() then
-			lastTime = currentTime
-			return
-		end
-		
-		if (currentTime - lastTime) > 199999 then
-			lastTime = currentTime
-		end
-		if (currentTime - lastTime) > 10 then
-			contador = contador + 1
-			lastTime = currentTime
-			return
-		end
-		caveBot.getWaypoints()[contador]:focus()
-		local wpArray = caveBot.getWaypoints()[contador]:getText():explode(";") --[[ Separando a position do modo ]]
-		local stringPos = wpArray[1]:explode(",")
-		local wpX = tonumber(stringPos[1]) -- Separando as posições X,Y,Z.
-		local wpY = tonumber(stringPos[2])
-		local wpZ = tonumber(stringPos[3])
+	if andar == nil then
+		andar = cycleEvent(function ()
+			local currentTime = os.time()
+			
+			if #caveBot.getWaypoints() == 0 then
+				return
+			end
+			if contador > #caveBot.getWaypoints() then
+				contador = 1
+			end
+			if not g_game.isOnline() then
+				return
+			end
+			local player = g_game.getLocalPlayer()
+			local pos = player:getPosition()
+			
+			if player:isAutoWalking() or player:isServerWalking() then
+				lastTime = currentTime
+				return
+			end
+			
+			if g_game.isAttacking() then
+				lastTime = currentTime
+				return
+			end
+			
+			if (currentTime - lastTime) > 199999 then
+				lastTime = currentTime
+			end
+			if (currentTime - lastTime) > 10 then
+				contador = contador + 1
+				lastTime = currentTime
+				return
+			end
+			caveBot.getWaypoints()[contador]:focus()
+			local wpArray = caveBot.getWaypoints()[contador]:getText():explode(";") --[[ Separando a position do modo ]]
+			local stringPos = wpArray[1]:explode(",")
+			local wpX = tonumber(stringPos[1]) -- Separando as posições X,Y,Z.
+			local wpY = tonumber(stringPos[2])
+			local wpZ = tonumber(stringPos[3])
 
-		local delaySleep = wpX*1000
-		if wpArray[2] == "Sleep" then  -- Verificando o modo do waypoint.
-			removeEvent(andar) andar = nil
-				scheduleEvent(function () 
-					contador = contador + 1
-					lastTime = currentTime
-					cave()
-				end, delaySleep)
-		end
-		
-		if wpArray[2] == "Walk" then
-			if caveWindow:getChildById('PathFind'):isChecked() then
-				local toposPath = {x = wpX, y = wpY, z = wpZ}
-				local result = g_map.findPath(player:getPosition(),toposPath, 50000, PathFindFlags.AllowNonPathable)
+			local delaySleep = wpX*1000
+			if wpArray[2] == "Sleep" then  -- Verificando o modo do waypoint.
+				removeEvent(andar) andar = nil
+					scheduleEvent(function () 
+						contador = contador + 1
+						lastTime = currentTime
+						cave()
+					end, delaySleep)
+			end
+			
+			if wpArray[2] == "Walk" then
+				if caveWindow:getChildById('PathFind'):isChecked() then
+					local toposPath = {x = wpX, y = wpY, z = wpZ}
+					local result = g_map.findPath(player:getPosition(),toposPath, 50000, PathFindFlags.AllowNonPathable)
+
+					if #result <= 0 or #result > 127 then
+					    path_interrupt = false
+						contador = contador + 1
+						lastTime = currentTime
+						if contador <= #caveBot.getWaypoints() then
+							caveBot.getWaypoints()[contador]:focus()
+						end
+					end
+					if #result >= 1 then
+						path_interrupt = true
+					end
+					
+					if path_interrupt == true and #result <= 127 then
+						g_game.autoWalk(result)
+						if postostring(player:getPosition()) == postostring(toposPath) then
+							contador = contador + 1
+							lastTime = currentTime
+							if contador <= #caveBot.getWaypoints() then
+								caveBot.getWaypoints()[contador]:focus()
+							end
+						end
+					end
+				end
+				if not caveWindow:getChildById('PathFind'):isChecked() then
+					local toposWalk = g_map.getTile({x = wpX, y = wpY, z = wpZ})
+					
+					if not toposWalk then
+						local walkImpossiblePath = {x = wpX, y = wpY, z = wpZ}
+						local walkImpossible = g_map.findPath(player:getPosition(), walkImpossiblePath, 50000, 0)
+						
+						if #walkImpossible <= 0 then
+							path_interrupt = false
+							contador = contador + 1
+							lastTime = currentTime
+							if contador <= #caveBot.getWaypoints() then
+								caveBot.getWaypoints()[contador]:focus()
+							end
+						end
+						if #walkImpossible >= 1 then
+							path_interrupt = true
+						end
+						if path_interrupt == true then
+							g_game.autoWalk(walkImpossible)
+						if postostring(player:getPosition()) == postostring(walkImpossiblePath) then
+							contador = contador + 1
+							lastTime = currentTime
+							if contador <= #caveBot.getWaypoints() then
+								caveBot.getWaypoints()[contador]:focus()
+							end
+						end
+					end
+					end
+					if toposWalk then
+					player:autoWalk(toposWalk:getPosition())
+					
+						if postostring(player:getPosition()) == postostring(toposWalk:getPosition()) then
+							contador = contador + 1
+							lastTime = currentTime
+							if contador <= #caveBot.getWaypoints() then
+								caveBot.getWaypoints()[contador]:focus()
+							end
+						end
+					end
+				end
+			end
+			
+			if wpArray[2] == "Use" then
+				local toThing = g_map.getTile({x = wpX, y = wpY, z = wpZ})
+				local toPos = g_map.getTile({x = wpX, y = wpY, z = wpZ})
 				
-				if #result <= 0 then
-				    path_interrupt = false
+				if not toThing then
+					return
+				end
+				
+				g_game.use(toThing:getTopThing())
+				
+				if Position.distance(player:getPosition(), toPos:getPosition()) == 1 then
 					contador = contador + 1
 					lastTime = currentTime
 					if contador <= #caveBot.getWaypoints() then
 						caveBot.getWaypoints()[contador]:focus()
 					end
 				end
-				if #result >= 1 then
-					path_interrupt = true
+			end
+
+			if wpArray[2] == "Use Rope" then
+				local toThing = g_map.getTile({x = wpX, y = wpY, z = wpZ})
+				local toPos = g_map.getTile({x = wpX, y = wpY, z = wpZ})
+				
+				if not toThing then
+					return
 				end
 				
-				if path_interrupt == true then
-						g_game.autoWalk(result)
-					if postostring(player:getPosition()) == postostring(toposPath) then
-						contador = contador + 1
-						lastTime = currentTime
-						if contador <= #caveBot.getWaypoints() then
-							caveBot.getWaypoints()[contador]:focus()
-						end
-					end
-				end
-			end
-			if not caveWindow:getChildById('PathFind'):isChecked() then
-				local toposWalk = g_map.getTile({x = wpX, y = wpY, z = wpZ})
+				g_game.useInventoryItemWith(3003, toThing:getTopThing())
 				
-				if not toposWalk then
-					local walkImpossiblePath = {x = wpX, y = wpY, z = wpZ}
-					local walkImpossible = g_map.findPath(player:getPosition(), walkImpossiblePath, 50000, 0)
-					
-					if #walkImpossible <= 0 then
-						path_interrupt = false
-						contador = contador + 1
-						lastTime = currentTime
-						if contador <= #caveBot.getWaypoints() then
-							caveBot.getWaypoints()[contador]:focus()
-						end
-					end
-					if #walkImpossible >= 1 then
-						path_interrupt = true
-					end
-					if path_interrupt == true then
-						g_game.autoWalk(walkImpossible)
-					if postostring(player:getPosition()) == postostring(walkImpossiblePath) then
-						contador = contador + 1
-						lastTime = currentTime
-						if contador <= #caveBot.getWaypoints() then
-							caveBot.getWaypoints()[contador]:focus()
-						end
+				if Position.distance(player:getPosition(), toPos:getPosition()) == 1 then
+					contador = contador + 1
+					lastTime = currentTime
+					if contador <= #caveBot.getWaypoints() then
+						caveBot.getWaypoints()[contador]:focus()
 					end
 				end
-				end
-				if toposWalk then
-				player:autoWalk(toposWalk:getPosition())
+			end
+			
+			if wpArray[2] == "North" then
+				local toPos = g_map.getTile({x = wpX, y = wpY, z = wpZ})
 				
-					if postostring(player:getPosition()) == postostring(toposWalk:getPosition()) then
+				if not toPos then
+					return
+				end
+				if postostring(player:getPosition()) == postostring(toPos:getPosition()) then
+					g_game.walk(North)
+				end
+				if tostring(player:getPosition().z) ~= tostring(toPos:getPosition().z) then
 						contador = contador + 1
 						lastTime = currentTime
-						if contador <= #caveBot.getWaypoints() then
-							caveBot.getWaypoints()[contador]:focus()
-						end
+					if contador <= #caveBot.getWaypoints() then
+						caveBot.getWaypoints()[contador]:focus()
 					end
 				end
 			end
-		end
-		
-		if wpArray[2] == "Use" then
-			local toThing = g_map.getTile({x = wpX, y = wpY, z = wpZ})
-			local toPos = g_map.getTile({x = wpX, y = wpY, z = wpZ})
 			
-			if not toThing then
-				return
-			end
-			
-			g_game.use(toThing:getTopThing())
-			
-			if getDistanceBetween(player:getPosition(), toPos:getPosition()) == 1 then
-				contador = contador + 1
-				lastTime = currentTime
-				if contador <= #caveBot.getWaypoints() then
-					caveBot.getWaypoints()[contador]:focus()
+			if wpArray[2] == "South" then
+				local toPos = g_map.getTile({x = wpX, y = wpY, z = wpZ})
+				
+				if not toPos then
+					return
+				end
+				
+				if postostring(player:getPosition()) == postostring(toPos:getPosition()) then
+					g_game.walk(South)
+				end
+				if tostring(player:getPosition().z) ~= tostring(toPos:getPosition().z) then
+						contador = contador + 1
+						lastTime = currentTime
+					if contador <= #caveBot.getWaypoints() then
+						caveBot.getWaypoints()[contador]:focus()
+					end
 				end
 			end
-		end
-		
-		if wpArray[2] == "North" then
-			local toPos = g_map.getTile({x = wpX, y = wpY, z = wpZ})
 			
-			if not toPos then
-				return
-			end
-			if postostring(player:getPosition()) == postostring(toPos:getPosition()) then
-				g_game.walk(North)
-			end
-			if tostring(player:getPosition().z) ~= tostring(toPos:getPosition().z) then
-					contador = contador + 1
-					lastTime = currentTime
-				if contador <= #caveBot.getWaypoints() then
-					caveBot.getWaypoints()[contador]:focus()
+			if wpArray[2] == "East" then
+				local toPos = g_map.getTile({x = wpX, y = wpY, z = wpZ})
+				
+				if not toPos then
+					return
+				end
+				
+				if postostring(player:getPosition()) == postostring(toPos:getPosition()) then
+					g_game.walk(East)
+				end
+				if tostring(player:getPosition().z) ~= tostring(toPos:getPosition().z) then
+						contador = contador + 1
+						lastTime = currentTime
+					if contador <= #caveBot.getWaypoints() then
+						caveBot.getWaypoints()[contador]:focus()
+					end
 				end
 			end
-		end
-		
-		if wpArray[2] == "South" then
-			local toPos = g_map.getTile({x = wpX, y = wpY, z = wpZ})
 			
-			if not toPos then
-				return
-			end
-			
-			if postostring(player:getPosition()) == postostring(toPos:getPosition()) then
-				g_game.walk(South)
-			end
-			if tostring(player:getPosition().z) ~= tostring(toPos:getPosition().z) then
-					contador = contador + 1
-					lastTime = currentTime
-				if contador <= #caveBot.getWaypoints() then
-					caveBot.getWaypoints()[contador]:focus()
+			if wpArray[2] == "West" then
+				local toPos = g_map.getTile({x = wpX, y = wpY, z = wpZ})
+				
+				if not toPos then
+					return
+				end
+				
+				if postostring(player:getPosition()) == postostring(toPos:getPosition()) then
+					g_game.walk(West)
+				end
+				if tostring(player:getPosition().z) ~= tostring(toPos:getPosition().z) then
+						contador = contador + 1
+						lastTime = currentTime
+					if contador <= #caveBot.getWaypoints() then
+						caveBot.getWaypoints()[contador]:focus()
+					end
 				end
 			end
-		end
-		
-		if wpArray[2] == "East" then
-			local toPos = g_map.getTile({x = wpX, y = wpY, z = wpZ})
 			
-			if not toPos then
-				return
-			end
-			
-			if postostring(player:getPosition()) == postostring(toPos:getPosition()) then
-				g_game.walk(East)
-			end
-			if tostring(player:getPosition().z) ~= tostring(toPos:getPosition().z) then
-					contador = contador + 1
-					lastTime = currentTime
-				if contador <= #caveBot.getWaypoints() then
-					caveBot.getWaypoints()[contador]:focus()
-				end
-			end
-		end
-		
-		if wpArray[2] == "West" then
-			local toPos = g_map.getTile({x = wpX, y = wpY, z = wpZ})
-			
-			if not toPos then
-				return
-			end
-			
-			if postostring(player:getPosition()) == postostring(toPos:getPosition()) then
-				g_game.walk(West)
-			end
-			if tostring(player:getPosition().z) ~= tostring(toPos:getPosition().z) then
-					contador = contador + 1
-					lastTime = currentTime
-				if contador <= #caveBot.getWaypoints() then
-					caveBot.getWaypoints()[contador]:focus()
-				end
-			end
-		end
-		
-	end, 500)
-					
-end
+		end, 100)
+	end
 end
 
 function updatePosition()
@@ -567,6 +585,16 @@ function initPopup()
     function(menuPosition, lookThing, useThing, creatureThing)
       return lookThing ~= nil and lookThing:getTile() ~= nil
     end)
+
+	modules.game_interface.addMenuHook("1234", tr("Add Waypoint(Use Rope)"), 
+    function(menuPosition, lookThing, useThing, creatureThing)
+			local pos = lookThing:getPosition()
+			local waypoint = pos.x..","..pos.y..","..pos.z..";Use Rope;"..#caveBot.getWaypoints() + 1
+			caveBot.addWaypoint(waypoint)
+    end,
+    function(menuPosition, lookThing, useThing, creatureThing)
+      return lookThing ~= nil and lookThing:getTile() ~= nil
+    end)
 	
 	modules.game_interface.addMenuHook("123", tr("Add Stair(North)"), 
     function(menuPosition, lookThing, useThing, creatureThing)
@@ -611,6 +639,7 @@ function terminatePopup()
 	if popupStatus then
 		 modules.game_interface.removeMenuHook("1234", tr("Add Waypoint(Walk)"))
 		modules.game_interface.removeMenuHook("1234", tr("Add Waypoint(Use)"))
+		modules.game_interface.removeMenuHook("1234", tr("Add Waypoint(Use Rope)"))
 		modules.game_interface.removeMenuHook("123", tr("Add Stair(North)"))
 		modules.game_interface.removeMenuHook("123", tr("Add Stair(South)"))
 		modules.game_interface.removeMenuHook("123", tr("Add Stair(East)"))
