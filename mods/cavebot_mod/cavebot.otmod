@@ -1,0 +1,9 @@
+Module
+  name: cavebot_mod
+  description: Cavebot Waypoints
+  author: Gustavo Blaze(GM Slash Citeron)
+  website: forum.tibiarpgbrasil.com
+  autoload: true
+  scripts: [ cavebot ]
+  @onLoad: caveBot.online()
+  @onUnload: caveBot.offline()

@@ -1,0 +1,242 @@
+Waypoint < Label
+  font: verdana-11px-monochrome
+  background-color: alpha
+  text-offset: 2 0
+  focusable: true
+
+  $focus:
+    background-color: #006600
+    color: #ffffff
+
+MainWindow
+  id: cbWindow
+  !text: tr('Waypoints')
+  size: 510 410
+  visible: false
+  
+  @onEnter: self:hide()
+  @onEscape: self:hide()
+  @onSetup: |
+    g_keyboard.bindKeyPress('Up', function() self:getChildById('wpList'):focusPreviousChild(KeyboardFocusReason) end, self)
+    g_keyboard.bindKeyPress('Down', function() self:getChildById('wpList'):focusNextChild(KeyboardFocusReason) end, self)
+  &save: true
+
+  TextList
+    id: wpList
+    anchors.top: parent.top
+    anchors.left: parent.left
+    margin-top: 15
+    margin-bottom: 5
+    padding: 1
+    focusable: false
+    vertical-scrollbar: caveScrollBar
+    width: 150
+    height: 300
+    auto-focus: last
+
+  VerticalScrollBar
+    id: caveScrollBar
+    anchors.top: wpList.top
+    anchors.bottom: wpList.bottom
+    anchors.right: wpList.right
+    step: 14
+    pixels-scroll: true
+  Label
+    id: caveListLabel
+    !text: ('Waypoint List')
+    anchors.bottom: wpList.top
+    anchors.left: wpList.left
+    anchors.right: wpList.right
+    text-align: center
+    margin-bottom: 5
+  Button
+    id: caveListRemove
+    !text: ('Remove Selected')
+    width: 110
+    anchors.left: wpList.left
+    anchors.top: wpList.bottom
+    margin-top: 5
+    @onClick: caveBot.removeWaypoint()
+  Button
+    id: caveListRemove
+    !text: ('Clear')
+    width: 40
+    anchors.left: caveListRemove.right
+    anchors.top: wpList.bottom
+    margin-left: 2
+    margin-top: 5
+    @onClick: caveBot.clearConfirm()
+  Label
+    id: optionsWalkLabel
+    !text: ('Add Waypoint Mode')
+    anchors.bottom: painel1.top
+    anchors.left: painel1.left
+    anchors.right: painel1.right
+    text-align: center
+    margin-bottom: 5
+  Panel
+    id: painel1
+    height: 50
+    width: 240
+    border: 1 black
+    background-color: #00000022
+    anchors.left: wpList.right
+    margin-left: 40
+    anchors.top: parent.top
+    margin-top: 45
+    
+    Button
+      id: walkButton
+      !text: tr('Walk')
+      width: 100
+      anchors.top: parent.top
+      anchors.left: parent.left
+      margin-top: 15
+      margin-left: 18
+      @onClick: addWalk()
+    Button
+      id: useButton
+      !text: tr('Use')
+      width: 100
+      anchors.top: parent.top
+      anchors.left: prev.right
+      margin-top: 15
+      margin-left: 5
+      @onClick: addUse()
+  Label
+    id: optionsStairLabel
+    !text: ('Add Stair Direction')
+    anchors.top: parent.top
+    anchors.left: painel2.left
+    anchors.right: painel2.right
+    text-align: center
+    margin-top: 120
+  Panel
+    id: painel2
+    height: 80
+    width: 240
+    border: 1 black
+    background-color: #00000022
+    anchors.left: wpList.right
+    margin-left: 40
+    anchors.top: parent.top
+    margin-top: 140
+    
+    Button
+      id: upButton
+      !text: tr('North')
+      width: 100
+      anchors.top: parent.top
+      anchors.left: parent.left
+      margin-top: 15
+      margin-left: 18
+      @onClick: addStairNorth()
+    Button
+      id: rightButton
+      !text: tr('East')
+      width: 100
+      anchors.top: parent.top
+      anchors.left: upButton.right
+      margin-top: 15
+      margin-left: 5
+      @onClick: addStairEast()
+    Button
+      id: downButton
+      !text: tr('South')
+      width: 100
+      anchors.top: upButton.bottom
+      anchors.left: parent.left
+      margin-top: 5
+      margin-left: 18
+      @onClick: addStairSouth()
+    Button
+      id: leftButton
+      !text: tr('West')
+      width: 100
+      anchors.top: rightButton.bottom
+      anchors.left: upButton.right
+      margin-top: 5
+      margin-left: 5
+      @onClick: addStairWest()
+  CheckBox
+    id: caveEnable
+    text: Enable
+    width: 15
+    anchors.top: parent.top
+    margin-top: 15
+    anchors.right: parent.right
+    anchors.left: wpList.right
+    margin-left: 15
+    @onCheckChange: if self:isChecked() then cave() else delcave() end
+  CheckBox
+    id: popupEnable
+    text: Mouse PopUp
+    width: 15
+    anchors.top: painel2.bottom
+    margin-top: 15
+    anchors.right: parent.right
+    anchors.left: wpList.right
+    margin-left: 15
+    @onCheckChange: if self:isChecked() then initPopup() else terminatePopup() end
+  Label
+    id: posText
+    !text: ('X, Y, Z')
+    text-auto-resize: true
+    anchors.left: parent.left
+    anchors.top: popupEnable.bottom
+    margin-left: 300
+    margin-top: 15
+  Label
+    id: posText2
+    !text: ('Position: ')
+    text-auto-resize: true
+    anchors.left: posText.left
+    anchors.top: popupEnable.bottom
+    margin-left: -52
+    margin-top: 15
+  Label
+    id: sleepLabel
+    !text: ('Sleep')
+    anchors.left: wpList.right
+    anchors.top: prev.top
+    margin-top: 10
+    margin-left: 10
+  TextEdit
+    id: sleepEdit
+    anchors.left: sleepLabel.left
+    anchors.top: sleepLabel.bottom
+    margin-top: 5
+    width: 50
+  CheckBox
+    id: PathFind
+    !text: tr('Use find path')
+    anchors.top: sleepEdit.bottom
+    anchors.left: sleepEdit.left
+    anchors.right: sleepButton.right
+    margin-top: 15
+  Button
+    id: sleepButton
+    width: 63
+    text: Add Sleep
+    anchors.left: sleepEdit.right
+    anchors.top: sleepEdit.top
+    margin-left: 5
+    @onClick: local number = caveWindow:getChildById('sleepEdit'):getText() addSleep(number)
+  Button
+    id: arquivoButton
+    !text: tr('Save/Load Waypoints')
+    width: 150
+    anchors.top: caveListRemove.bottom
+    anchors.left: caveListRemove.left
+    margin-top: 3
+    @onClick: if saveWindow:isVisible() then saveWindow:hide() else saveWindow:show() saveWindow:focus() end
+  Button
+    id: hideButton
+    !text: tr('X')
+    width: 64
+    height: 15
+    anchors.right: parent.right
+    anchors.bottom: parent.bottom
+    margin-right: -6
+    margin-bottom: -5
+    @onClick: caveWindow:hide()

@@ -1,0 +1,25 @@
+MainWindow
+  id: vitagransioWindow
+  text: Vita Gran Sio
+  height: 90
+  width: 260
+  visible: false
+  Label
+    id: vitagransioLabel
+    text: Ativar/Desativar Vita Gran Sio
+    anchors.top: parent.top
+    anchors.left: parent.left
+  Button
+    id: buttonCancel
+    text: Desativar
+    width: 109
+    anchors.bottom: parent.bottom
+    anchors.right: parent.right
+    @onClick: cancelVitaBuff()
+  Button
+    id: buttonOk
+    text: Ativar
+    width: 109
+    anchors.bottom: parent.bottom
+    anchors.left: parent.left
+    @onClick: vitaBuff()

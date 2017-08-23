@@ -1,0 +1,28 @@
+MainWindow
+  id: utevogranWindow
+  text:	Auto Mount
+  height: 90
+  width: 260
+  visible: false
+  
+  Label
+    id: Auto Mount Label
+    text: Ativar/Desativar Auto Mount
+    anchors.top: parent.top
+    anchors.left: parent.left
+
+  Button
+    id: buttonCancel
+    text: Desativar
+    width: 109
+    anchors.bottom: parent.bottom
+    anchors.right: parent.right
+    @onClick: cancelAutoMount()
+
+  Button
+    id: buttonOk
+    text: Ativar
+    width: 109
+    anchors.bottom: parent.bottom
+    anchors.left: parent.left
+    @onClick: autoMount()

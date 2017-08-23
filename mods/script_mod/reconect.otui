@@ -1,0 +1,28 @@
+MainWindow
+  id: reconectWindow
+  text:	Recconect
+  height: 90
+  width: 260
+  visible: false
+  
+  Label
+    id: recconect Label
+    text: Ativar/Desativar Recconect
+    anchors.top: parent.top
+    anchors.left: parent.left
+
+  Button
+    id: buttonCancel
+    text: Desativar
+    width: 109
+    anchors.bottom: parent.bottom
+    anchors.right: parent.right
+    @onClick: cancelRecconect()
+
+  Button
+    id: buttonOk
+    text: Ativar
+    width: 109
+    anchors.bottom: parent.bottom
+    anchors.left: parent.left
+    @onClick: recconect()

@@ -1,0 +1,103 @@
+ListRowComplex < UIWidget
+  height: 14
+  background-color: alpha
+  &updateOnStates: |
+    function(self)
+      local children = self:getChildren()
+      for i=1,#children do
+        children[i]:setOn(self:isFocused())
+      end
+    end
+  @onFocusChange: self:updateOnStates()
+  @onSetup: self:updateOnStates()
+
+  $focus:
+    background-color: #ffffff22
+
+  Label
+    id: details
+    color: #aaaaaa
+    anchors.top: parent.top
+    anchors.left: parent.left
+    font: verdana-11px-monochrome
+    text-auto-resize: true
+    background-color: alpha
+    text-offset: 2 0
+
+    $on:
+      color: #ffffff
+
+  Button
+    id: remove
+    text: x
+    width: 12
+    height: 12
+    anchors.top: parent.top
+    anchors.right: parent.right
+    margin-right: 4
+    margin-top: 1
+MainWindow
+  id: save_load
+  !text: tr('Save/Load Waypoints')
+  size: 300 200
+  visible: false
+  
+  @onEnter: saveWindow:saveHide()
+  @onEscape: saveWindow:saveHide()
+  
+  Label
+    text: Save/Load
+    anchors.top: parent.top
+    anchors.left: LoadList.left
+    margin-left: 5
+  TextList
+    id: LoadList
+    anchors.top: parent.top
+    anchors.left: parent.left
+    margin-bottom: 5
+    margin-top: 15
+    padding: 1
+    focusable: false
+    phantom: true
+    vertical-scrollbar: LoadSettingScrollBar
+    width: 130
+    height: 100
+  VerticalScrollBar
+    id: LoadSettingScrollBar
+    anchors.top: LoadList.top
+    anchors.bottom: LoadList.bottom
+    anchors.left: LoadList.right
+    step: 14
+    pixels-scroll: true
+  TextEdit
+    id: fileText
+    width: 100
+    anchors.top: LoadList.top
+    anchors.left: LoadList.right
+    margin-left: 20
+  Button
+    id: saveButton
+    text: Save
+    anchors.left: fileText.left
+    anchors.top: fileText.bottom
+    anchors.right: fileText.right
+    margin-top: 5
+    @onClick: caveBot.saveWaypoints(saveWindow:getChildById('fileText'):getText()) caveBot.refreshDir() saveWindow:getChildById('fileText'):setText('')
+  Button
+    id: loadButton
+    text: Load File
+    anchors.left: LoadList.left
+    anchors.right: LoadSettingScrollBar.right
+    anchors.bottom: parent.bottom
+    margin-bottom: 5
+    @onClick: local fileName = LoadList:getFocusedChild() if fileName then caveBot.loadWaypoints(fileName:getText()) end
+  Button
+    id: hideButton
+    !text: tr('X')
+    width: 64
+    height: 15
+    anchors.right: parent.right
+    anchors.bottom: parent.bottom
+    margin-right: -6
+    margin-bottom: -5
+    @onClick: saveWindow:hide()
